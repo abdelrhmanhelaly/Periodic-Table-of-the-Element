@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تحدي الجدول الدوري الحديث</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --success: #22c55e;
+      --error: #ef4444;
+      --slot-bg: #334155;
+      
+      /* ألوان تصنيفات العناصر */
+      --alkali: #f87171;
+      --alkaline: #fb923c;
+      --transition: #facc15;
+      --post-transition: #4ade80;
+      --metalloid: #2dd4bf;
+      --nonmetal: #60a5fa;
+      --halogen: #a78bfa;
+      --noble: #f472b6;
+      --lanth-act: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .level-tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      background: #334155;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover { background: #475569; }
+    .btn.active {
+      background: var(--accent);
+      color: #0f172a;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+
+    .hud {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .prompt-box {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--card-bg);
+      border: 1px solid #334155;
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-height: 90px;
+      justify-content: center;
+    }
+
+    .prompt-title {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+
+    .target-highlight {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--accent);
+      text-shadow: 0 0 12px rgba(56,189,248,0.3);
+    }
+
+    /* حاوية ومحيط الجدول الدوري */
+    .table-container {
+      width: 100%;
+      max-width: 1100px;
+      overflow-x: auto;
+      background: #0b1120;
+      padding: 14px;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .periodic-table {
+      direction: ltr; /* اتجاه الترتيب من اليسار لليمين */
+      display: grid;
+      grid-template-columns: repeat(18, minmax(44px, 1fr));
+      grid-template-rows: repeat(7, minmax(52px, 1fr));
+      gap: 4px;
+      min-width: 820px;
+    }
+
+    .cell {
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      font-size: 0.85rem;
+      font-weight: bold;
+      transition: transform 0.15s ease, background 0.2s ease, opacity 0.2s ease;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .cell .num {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 0.65rem;
+      opacity: 0.7;
+    }
+
+    .cell .symbol {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .cell:hover {
+      transform: scale(1.06);
+      z-index: 5;
+    }
+
+    /* تصنيفات الألوان */
+    .cat-alkali { background-color: var(--alkali); }
+    .cat-alkaline { background-color: var(--alkaline); }
+    .cat-transition { background-color: var(--transition); }
+    .cat-post-transition { background-color: var(--post-transition); }
+    .cat-metalloid { background-color: var(--metalloid); }
+    .cat-nonmetal { background-color: var(--nonmetal); }
+    .cat-halogen { background-color: var(--halogen); }
+    .cat-noble { background-color: var(--noble); }
+    .cat-lanth-act { background-color: var(--lanth-act); }
+
+    /* حالات اللعب */
+    .cell.completed {
+      background: var(--success) !important;
+      color: #fff;
+      cursor: default;
+      opacity: 0.85;
+    }
+
+    .cell.drop-target {
+      background-color: var(--slot-bg) !important;
+      border: 2px dashed #64748b;
+      color: transparent;
+    }
+
+    .cell.drop-target .num {
+      color: #94a3b8;
+    }
+
+    .cell.drop-target.dragover {
+      border-color: var(--accent);
+      background-color: #475569 !important;
+    }
+
+    /* شريحة السحب للمستوى 2 */
+    .draggable-card {
+      width: 70px;
+      height: 70px;
+      background: var(--accent);
+      color: #0f172a;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+      margin-top: 6px;
+    }
+
+    .draggable-card:active {
+      cursor: grabbing;
+    }
+
+    /* خيارات المستوى 3 */
+    .state-options {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .btn-state {
+      min-width: 120px;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+    }
+
+    /* مؤثرات حركية */
+    @keyframes flash-correct {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); filter: brightness(1.4); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .flash-win { animation: flash-correct 0.3s ease; }
+    .shake-error { animation: shake 0.35s ease; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="level-tabs">
+      <button class="btn active" onclick="switchLevel(1)">المستوى 1: اضغط العنصر</button>
+      <button class="btn" onclick="switchLevel(2)">المستوى 2: سحب وإفلات</button>
+      <button class="btn" onclick="switchLevel(3)">المستوى 3: حالة المادة</button>
+    </div>
+    <div class="hud">
+      <div>المتبقي: <span id="remaining-count" style="color:var(--accent);">0</span></div>
+      <div>الأخطاء: <span id="errors-count" style="color:var(--error);">0</span></div>
+    </div>
+  </header>
+
+  <div class="prompt-box" id="prompt-box"></div>
+
+  <div class="table-container" id="table-container">
+    <div class="periodic-table" id="periodic-table"></div>
+  </div>
+
+  <script>
+    // محرك المؤثرات الصوتية (Web Audio API)
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      },
+      playTone(freq, type, duration) {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      },
+      correct() {
+        this.playTone(523.25, 'triangle', 0.12);
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.2), 100);
+      },
+      wrong() {
+        this.playTone(180, 'sawtooth', 0.25);
+      },
+      victory() {
+        [440, 554, 659, 880].forEach((freq, idx) => {
+          setTimeout(() => this.playTone(freq, 'sine', 0.3), idx * 120);
+        });
+      }
+    };
+
+    // قاعدة بيانات عناصر الجدول الدوري
+    const elementsData = [
+      { num: 1, sym: "H", name: "هيدروجين", r: 1, c: 1, cat: "nonmetal", state: "غاز" },
+      { num: 2, sym: "He", name: "هيليوم", r: 1, c: 18, cat: "noble", state: "غاز" },
+      { num: 3, sym: "Li", name: "ليثيوم", r: 2, c: 1, cat: "alkali", state: "صلب" },
+      { num: 4, sym: "Be", name: "بيريليوم", r: 2, c: 2, cat: "alkaline", state: "صلب" },
+      { num: 5, sym: "B", name: "بورون", r: 2, c: 13, cat: "metalloid", state: "صلب" },
+      { num: 6, sym: "C", name: "كربون", r: 2, c: 14, cat: "nonmetal", state: "صلب" },
+      { num: 7, sym: "N", name: "نيتروجين", r: 2, c: 15, cat: "nonmetal", state: "غاز" },
+      { num: 8, sym: "O", name: "أكسجين", r: 2, c: 16, cat: "nonmetal", state: "غاز" },
+      { num: 9, sym: "F", name: "فلور", r: 2, c: 17, cat: "halogen", state: "غاز" },
+      { num: 10, sym: "Ne", name: "نيون", r: 2, c: 18, cat: "noble", state: "غاز" },
+      { num: 11, sym: "Na", name: "صوديوم", r: 3, c: 1, cat: "alkali", state: "صلب" },
+      { num: 12, sym: "Mg", name: "ماغنسيوم", r: 3, c: 2, cat: "alkaline", state: "صلب" },
+      { num: 13, sym: "Al", name: "ألومنيوم", r: 3, c: 13, cat: "post-transition", state: "صلب" },
+      { num: 14, sym: "Si", name: "سيليكون", r: 3, c: 14, cat: "metalloid", state: "صلب" },
+      { num: 15, sym: "P", name: "فوسفور", r: 3, c: 15, cat: "nonmetal", state: "صلب" },
+      { num: 16, sym: "S", name: "كبريت", r: 3, c: 16, cat: "nonmetal", state: "صلب" },
+      { num: 17, sym: "Cl", name: "كلور", r: 3, c: 17, cat: "halogen", state: "غاز" },
+      { num: 18, sym: "Ar", name: "أرجون", r: 3, c: 18, cat: "noble", state: "غاز" },
+      { num: 19, sym: "K", name: "بوتاسيوم", r: 4, c: 1, cat: "alkali", state: "صلب" },
+      { num: 20, sym: "Ca", name: "كالسيوم", r: 4, c: 2, cat: "alkaline", state: "صلب" },
+      { num: 21, sym: "Sc", name: "سكانديوم", r: 4, c: 3, cat: "transition", state: "صلب" },
+      { num: 22, sym: "Ti", name: "تيتانيوم", r: 4, c: 4, cat: "transition", state: "صلب" },
+      { num: 23, sym: "V", name: "فاناديوم", r: 4, c: 5, cat: "transition", state: "صلب" },
+      { num: 24, sym: "Cr", name: "كروم", r: 4, c: 6, cat: "transition", state: "صلب" },
+      { num: 25, sym: "Mn", name: "منجنيز", r: 4, c: 7, cat: "transition", state: "صلب" },
+      { num: 26, sym: "Fe", name: "حديد", r: 4, c: 8, cat: "transition", state: "صلب" },
+      { num: 27, sym: "Co", name: "كوبلت", r: 4, c: 9, cat: "transition", state: "صلب" },
+      { num: 28, sym: "Ni", name: "نيكل", r: 4, c: 10, cat: "transition", state: "صلب" },
+      { num: 29, sym: "Cu", name: "نحاس", r: 4, c: 11, cat: "transition", state: "صلب" },
+      { num: 30, sym: "Zn", name: "خارصين", r: 4, c: 12, cat: "transition", state: "صلب" },
+      { num: 31, sym: "Ga", name: "جاليوم", r: 4, c: 13, cat: "post-transition", state: "صلب" },
+      { num: 32, sym: "Ge", name: "جرمانيوم", r: 4, c: 14, cat: "metalloid", state: "صلب" },
+      { num: 33, sym: "As", name: "زرنيخ", r: 4, c: 15, cat: "metalloid", state: "صلب" },
+      { num: 34, sym: "Se", name: "سيلينيوم", r: 4, c: 16, cat: "nonmetal", state: "صلب" },
+      { num: 35, sym: "Br", name: "بروم", r: 4, c: 17, cat: "halogen", state: "سائل" },
+      { num: 36, sym: "Kr", name: "كريبتون", r: 4, c: 18, cat: "noble", state: "غاز" },
+      { num: 37, sym: "Rb", name: "روبيديوم", r: 5, c: 1, cat: "alkali", state: "صلب" },
+      { num: 38, sym: "Sr", name: "سترونشيوم", r: 5, c: 2, cat: "alkaline", state: "صلب" },
+      { num: 39, sym: "Y", name: "إتريوم", r: 5, c: 3, cat: "transition", state: "صلب" },
+      { num: 40, sym: "Zr", name: "زركونيوم", r: 5, c: 4, cat: "transition", state: "صلب" },
+      { num: 41, sym: "Nb", name: "نيوبيوم", r: 5, c: 5, cat: "transition", state: "صلب" },
+      { num: 42, sym: "Mo", name: "موليبدنوم", r: 5, c: 6, cat: "transition", state: "صلب" },
+      { num: 43, sym: "Tc", name: "تكنيشيوم", r: 5, c: 7, cat: "transition", state: "صلب" },
+      { num: 44, sym: "Ru", name: "روثينيوم", r: 5, c: 8, cat: "transition", state: "صلب" },
+      { num: 45, sym: "Rh", name: "روديوم", r: 5, c: 9, cat: "transition", state: "صلب" },
+      { num: 46, sym: "Pd", name: "بلاديوم", r: 5, c: 10, cat: "transition", state: "صلب" },
+      { num: 47, sym: "Ag", name: "فضة", r: 5, c: 11, cat: "transition", state: "صلب" },
+      { num: 48, sym: "Cd", name: "كادميوم", r: 5, c: 12, cat: "transition", state: "صلب" },
+      { num: 49, sym: "In", name: "إنديوم", r: 5, c: 13, cat: "post-transition", state: "صلب" },
+      { num: 50, sym: "Sn", name: "قصدير", r: 5, c: 14, cat: "post-transition", state: "صلب" },
+      { num: 51, sym: "Sb", name: "أنتيمون", r: 5, c: 15, cat: "metalloid", state: "صلب" },
+      { num: 52, sym: "Te", name: "تيلوريوم", r: 5, c: 16, cat: "metalloid", state: "صلب" },
+      { num: 53, sym: "I", name: "يود", r: 5, c: 17, cat: "halogen", state: "صلب" },
+      { num: 54, sym: "Xe", name: "زينون", r: 5, c: 18, cat: "noble", state: "غاز" },
+      { num: 55, sym: "Cs", name: "سيزيوم", r: 6, c: 1, cat: "alkali", state: "صلب" },
+      { num: 56, sym: "Ba", name: "باريوم", r: 6, c: 2, cat: "alkaline", state: "صلب" },
+      { num: 57, sym: "La", name: "لانثانوم", r: 6, c: 3, cat: "lanth-act", state: "صلب" },
+      { num: 72, sym: "Hf", name: "هافنيوم", r: 6, c: 4, cat: "transition", state: "صلب" },
+      { num: 73, sym: "Ta", name: "تانتالوم", r: 6, c: 5, cat: "transition", state: "صلب" },
+      { num: 74, sym: "W", name: "تنجستن", r: 6, c: 6, cat: "transition", state: "صلب" },
+      { num: 75, sym: "Re", name: "رينيوم", r: 6, c: 7, cat: "transition", state: "صلب" },
+      { num: 76, sym: "Os", name: "أوزميوم", r: 6, c: 8, cat: "transition", state: "صلب" },
+      { num: 77, sym: "Ir", name: "إيريديوم", r: 6, c: 9, cat: "transition", state: "صلب" },
+      { num: 78, sym: "Pt", name: "بلاتين", r: 6, c: 10, cat: "transition", state: "صلب" },
+      { num: 79, sym: "Au", name: "ذهب", r: 6, c: 11, cat: "transition", state: "صلب" },
+      { num: 80, sym: "Hg", name: "زئبق", r: 6, c: 12, cat: "transition", state: "سائل" },
+      { num: 81, sym: "Tl", name: "ثاليوم", r: 6, c: 13, cat: "post-transition", state: "صلب" },
+      { num: 82, sym: "Pb", name: "رصاص", r: 6, c: 14, cat: "post-transition", state: "صلب" },
+      { num: 83, sym: "Bi", name: "بزموت", r: 6, c: 15, cat: "post-transition", state: "صلب" },
+      { num: 84, sym: "Po", name: "بولونيوم", r: 6, c: 16, cat: "post-transition", state: "صلب" },
+      { num: 85, sym: "At", name: "أستاتين", r: 6, c: 17, cat: "halogen", state: "صلب" },
+      { num: 86, sym: "Rn", name: "رادون", r: 6, c: 18, cat: "noble", state: "غاز" },
+      { num: 87, sym: "Fr", name: "فرانسيوم", r: 7, c: 1, cat: "alkali", state: "صلب" },
+      { num: 88, sym: "Ra", name: "راديوم", r: 7, c: 2, cat: "alkaline", state: "صلب" },
+      { num: 89, sym: "Ac", name: "أكتينيوم", r: 7, c: 3, cat: "lanth-act", state: "صلب" },
+      { num: 104, sym: "Rf", name: "روذرفورديوم", r: 7, c: 4, cat: "transition", state: "صلب" },
+      { num: 105, sym: "Db", name: "دوبنيوم", r: 7, c: 5, cat: "transition", state: "صلب" },
+      { num: 106, sym: "Sg", name: "سيبورجيوم", r: 7, c: 6, cat: "transition", state: "صلب" },
+      { num: 107, sym: "Bh", name: "بوريوم", r: 7, c: 7, cat: "transition", state: "صلب" },
+      { num: 108, sym: "Hs", name: "هاسيوم", r: 7, c: 8, cat: "transition", state: "صلب" },
+      { num: 109, sym: "Mt", name: "مايتنريوم", r: 7, c: 9, cat: "transition", state: "صلب" },
+      { num: 110, sym: "Ds", name: "دارمشتاتيوم", r: 7, c: 10, cat: "transition", state: "صلب" },
+      { num: 111, sym: "Rg", name: "رونتجينيوم", r: 7, c: 11, cat: "transition", state: "صلب" },
+      { num: 112, sym: "Cn", name: "كوبرنيسيوم", r: 7, c: 12, cat: "transition", state: "صلب" },
+      { num: 113, sym: "Nh", name: "نيهونيوم", r: 7, c: 13, cat: "post-transition", state: "صلب" },
+      { num: 114, sym: "Fl", name: "فليروفيوم", r: 7, c: 14, cat: "post-transition", state: "صلب" },
+      { num: 115, sym: "Mc", name: "موسكوفيوم", r: 7, c: 15, cat: "post-transition", state: "صلب" },
+      { num: 116, sym: "Lv", name: "ليفرموريوم", r: 7, c: 16, cat: "post-transition", state: "صلب" },
+      { num: 117, sym: "Ts", name: "تينيسين", r: 7, c: 17, cat: "halogen", state: "صلب" },
+      { num: 118, sym: "Og", name: "أوجانيسون", r: 7, c: 18, cat: "noble", state: "غاز" }
+    ];
+
+    let currentLevel = 1;
+    let pool = [];
+    let currentTarget = null;
+    let errors = 0;
+    let selectedElementTouch = null;
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function updateHUD() {
+      document.getElementById('remaining-count').innerText = pool.length + (currentTarget ? 1 : 0);
+      document.getElementById('errors-count').innerText = errors;
+    }
+
+    function renderBaseTable() {
+      const table = document.getElementById('periodic-table');
+      table.innerHTML = '';
+
+      elementsData.forEach(el => {
+        const cell = document.createElement('div');
+        cell.className = `cell cat-${el.cat}`;
+        cell.id = `cell-${el.num}`;
+        cell.style.gridRow = el.r;
+        cell.style.gridColumn = el.c;
+        cell.dataset.num = el.num;
+
+        cell.innerHTML = `
+          <span class="num">${el.num}</span>
+          <span class="symbol">${el.sym}</span>
+        `;
+        table.appendChild(cell);
+      });
+    }
+
+    function switchLevel(lvl) {
+      currentLevel = lvl;
+      document.querySelectorAll('.level-tabs .btn').forEach((b, idx) => {
+        b.classList.toggle('active', idx + 1 === lvl);
+      });
+      errors = 0;
+      document.getElementById('table-container').style.display = (lvl === 3) ? 'none' : 'block';
+
+      if (lvl === 1) initLevel1();
+      else if (lvl === 2) initLevel2();
+      else if (lvl === 3) initLevel3();
+    }
+
+    /* ------------------------------------------------------------------
+       المستوى الأول: اختيار العنصر عبر اسمه فقط (بدون الرمز)
+    ------------------------------------------------------------------ */
+    function initLevel1() {
+      renderBaseTable();
+      const targetNums = [
+        1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+        24, 26, 27, 28, 29, 30, 35, 36, 47, 54, 55, 79, 80, 86,
+        32, 33, 51, 52, 85, 53
+      ];
+
+      pool = shuffle(elementsData.filter(el => targetNums.includes(el.num)));
+      nextLevel1Turn();
+
+      document.querySelectorAll('.cell').forEach(cell => {
+        cell.onclick = () => {
+          if (!currentTarget) return;
+          const num = parseInt(cell.dataset.num);
+          if (num === currentTarget.num) {
+            AudioEngine.correct();
+            cell.classList.add('completed', 'flash-win');
+            cell.onclick = null;
+            nextLevel1Turn();
+          } else {
+            AudioEngine.wrong();
+            errors++;
+            cell.classList.add('shake-error');
+            setTimeout(() => cell.classList.remove('shake-error'), 400);
+            updateHUD();
+          }
+        };
+      });
+    }
+
+    function nextLevel1Turn() {
+      if (pool.length === 0) {
+        AudioEngine.victory();
+        document.getElementById('prompt-box').innerHTML = `
+          <h2 style="color:var(--success);">أحسنت! أكملت المستوى الأول بنجاح 🎉</h2>
+          <button class="btn" style="margin-top:10px;" onclick="switchLevel(2)">الانتقال للمستوى الثاني ⬅</button>
+        `;
+        currentTarget = null;
+        updateHUD();
+        return;
+      }
+      currentTarget = pool.pop();
+      updateHUD();
+      // تم التعديل: إظهار اسم العنصر فقط دون الرمز
+      document.getElementById('prompt-box').innerHTML = `
+        <div class="prompt-title">اضغط على رمز العنصر التالي في الجدول:</div>
+        <div class="target-highlight">${currentTarget.name}</div>
+      `;
+    }
+
+    /* ------------------------------------------------------------------
+       المستوى الثاني: سحب وإفلات العناصر المحددة حصراً
+    ------------------------------------------------------------------ */
+    let missingNumsSet = new Set();
+
+    function initLevel2() {
+      renderBaseTable();
+
+      // أول 20 عنصر + كروم، حديد، نحاس، خارصين، فضة، ذهب، زئبق، بروم، يود، كريبتون، زينون، رادون، سيزيوم، جرمانيوم، زرنيخ، أنتيمون، تيلوريوم، أستاتين
+      const level2Targets = [
+        1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+        24, 26, 29, 30, 47, 79, 80, 35, 53, 36, 54, 86, 55, 32, 33, 51, 52, 85
+      ];
+
+      missingNumsSet = new Set(level2Targets);
+
+      // تفريغ الخلايا المستهدفة فقط
+      missingNumsSet.forEach(num => {
+        const cell = document.getElementById(`cell-${num}`);
+        if (cell) {
+          cell.classList.add('drop-target');
+          cell.innerHTML = `<span class="num">${num}</span>`;
+
+          // سحب وإفلات للحاسوب
+          cell.ondragover = (e) => { e.preventDefault(); cell.classList.add('dragover'); };
+          cell.ondragleave = () => cell.classList.remove('dragover');
+          cell.ondrop = (e) => {
+            e.preventDefault();
+            cell.classList.remove('dragover');
+            handleDrop(num);
+          };
+
+          // لمس للهاتف
+          cell.onclick = () => {
+            if (selectedElementTouch) {
+              handleDrop(num);
+            }
+          };
+        }
+      });
+
+      pool = shuffle(elementsData.filter(el => missingNumsSet.has(el.num)));
+      nextLevel2Turn();
+    }
+
+    function nextLevel2Turn() {
+      if (pool.length === 0) {
+        AudioEngine.victory();
+        document.getElementById('prompt-box').innerHTML = `
+          <h2 style="color:var(--success);">مذهل! رتبت جميع العناصر المطلوبة في أماكنها الصحيحة 🎉</h2>
+          <button class="btn" style="margin-top:10px;" onclick="switchLevel(3)">الانتقال للمستوى الثالث ⬅</button>
+        `;
+        currentTarget = null;
+        updateHUD();
+        return;
+      }
+
+      currentTarget = pool.pop();
+      selectedElementTouch = currentTarget;
+      updateHUD();
+
+      const box = document.getElementById('prompt-box');
+      box.innerHTML = `
+        <div class="prompt-title">اسحب العنصر إلى مكانه أو اضغط عليه ثم اضغط على مكانه في الجدول:</div>
+        <div class="draggable-card" draggable="true" id="drag-item">
+          <span style="font-size:0.75rem">${currentTarget.num}</span>
+          <span style="font-size:1.3rem">${currentTarget.sym}</span>
+          <span style="font-size:0.75rem">${currentTarget.name}</span>
+        </div>
+      `;
+
+      const dragItem = document.getElementById('drag-item');
+      dragItem.ondragstart = (e) => {
+        e.dataTransfer.setData('text/plain', currentTarget.num);
+      };
+    }
+
+    function handleDrop(targetNum) {
+      if (!currentTarget) return;
+
+      const cell = document.getElementById(`cell-${targetNum}`);
+      if (targetNum === currentTarget.num) {
+        AudioEngine.correct();
+        cell.classList.remove('drop-target');
+        cell.innerHTML = `
+          <span class="num">${currentTarget.num}</span>
+          <span class="symbol">${currentTarget.sym}</span>
+        `;
+        cell.classList.add('completed', 'flash-win');
+        cell.onclick = null;
+        nextLevel2Turn();
+      } else {
+        AudioEngine.wrong();
+        errors++;
+        cell.classList.add('shake-error');
+        setTimeout(() => cell.classList.remove('shake-error'), 400);
+        updateHUD();
+      }
+    }
+
+    /* ------------------------------------------------------------------
+       المستوى الثالث: الحالة الفيزيائية
+    ------------------------------------------------------------------ */
+    function initLevel3() {
+      const specialNums = [26, 29, 80]; // حديد، نحاس، زئبق
+      pool = shuffle(elementsData.filter(el => 
+        el.cat === 'alkali' ||
+        el.cat === 'alkaline' ||
+        el.cat === 'halogen' ||
+        el.cat === 'noble' ||
+        specialNums.includes(el.num)
+      ));
+
+      nextLevel3Turn();
+    }
+
+    function nextLevel3Turn() {
+      if (pool.length === 0) {
+        AudioEngine.victory();
+        document.getElementById('prompt-box').innerHTML = `
+          <h2 style="color:var(--success);">تهانينا! لقد أتقنت حالات المادة للعناصر بالكامل 🏆</h2>
+          <button class="btn" style="margin-top:10px;" onclick="switchLevel(1)">إعادة اللعبة من المستوى الأول 🔄</button>
+        `;
+        currentTarget = null;
+        updateHUD();
+        return;
+      }
+
+      currentTarget = pool.pop();
+      updateHUD();
+
+      const box = document.getElementById('prompt-box');
+      box.innerHTML = `
+        <div class="prompt-title">حدد الحالة الفيزيائية في درجة حرارة الغرفة للعنصر:</div>
+        <div class="target-highlight">${currentTarget.name} (${currentTarget.sym})</div>
+        <div class="state-options">
+          <button class="btn btn-state" onclick="checkState('صلب')">صلب 🪨</button>
+          <button class="btn btn-state" onclick="checkState('سائل')">سائل 💧</button>
+          <button class="btn btn-state" onclick="checkState('غاز')">غاز 💨</button>
+        </div>
+      `;
+    }
+
+    function checkState(selectedState) {
+      if (!currentTarget) return;
+
+      if (selectedState === currentTarget.state) {
+        AudioEngine.correct();
+        nextLevel3Turn();
+      } else {
+        AudioEngine.wrong();
+        errors++;
+        updateHUD();
+        const box = document.getElementById('prompt-box');
+        box.classList.add('shake-error');
+        setTimeout(() => box.classList.remove('shake-error'), 400);
+      }
+    }
+
+    window.onload = () => {
+      initLevel1();
+    };
+  </script>
+</body>
+</html>
